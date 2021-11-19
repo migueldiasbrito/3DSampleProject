@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Move : MonoBehaviour
 {
@@ -9,6 +10,23 @@ public class Move : MonoBehaviour
     public float jumpHeight = 1.0f;
     public float gravityValue = -9.81f;
 
+    private Vector3 move = Vector3.zero;
+    private bool jump = false;
+
+    public void UpdateMovement(InputAction.CallbackContext callbackContext)
+    {
+        Vector2 input = callbackContext.ReadValue<Vector2>();
+        move = new Vector3(input.x, 0, input.y);
+    }
+
+    public void Jump(InputAction.CallbackContext callbackContext)
+    {
+        if (callbackContext.performed && groundedPlayer)
+        {
+            jump = true;
+        }
+    }
+
     void Start()
     {
         controller = gameObject.GetComponent<CharacterController>();
@@ -18,7 +36,6 @@ public class Move : MonoBehaviour
     {
         groundedPlayer = controller.isGrounded;
 
-        Vector3 move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
         controller.Move(move * Time.deltaTime * playerSpeed);
 
         if (move != Vector3.zero)
@@ -27,9 +44,10 @@ public class Move : MonoBehaviour
         }
 
         // Changes the height position of the player..
-        if (Input.GetButtonDown("Jump") && groundedPlayer)
+        if (jump)
         {
             playerVelocity.y = Mathf.Sqrt(jumpHeight * -3.0f * gravityValue);
+            jump = false;
         }
         else if (!groundedPlayer)
         {
